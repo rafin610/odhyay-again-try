@@ -51,6 +51,18 @@ export function setAccessToken(token: string | null) {
   }
 }
 
+export async function signInWithGoogle(next = "/") {
+  const supabase = getSupabase();
+  if (!supabase) throw new Error("Supabase is not configured.");
+  const redirectTo = `${window.location.origin}${next}`;
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo },
+  });
+  if (error) throw error;
+  if (data.url) window.location.assign(data.url);
+}
+
 export async function signInWithEmail(email: string, password: string) {
   const supabase = getSupabase();
   if (!supabase) throw new Error("Supabase is not configured.");

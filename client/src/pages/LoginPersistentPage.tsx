@@ -3,7 +3,7 @@ import { FormEvent, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { ArrowRight } from "lucide-react";
 import { Mark, PageFrame } from "@/components/OdhyayShell";
-import { signInWithEmail } from "@/lib/supabase";
+import { signInWithEmail, signInWithGoogle } from "@/lib/supabase";
 
 export function LoginPersistentPage() {
   const [, setLocation] = useLocation();
@@ -13,6 +13,17 @@ export function LoginPersistentPage() {
   const [pending, setPending] = useState(false);
 
   const target = new URLSearchParams(window.location.search).get("next") || "/";
+
+  const signInGoogle = async () => {
+    setError(null);
+    setPending(true);
+    try {
+      await signInWithGoogle(target);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Google sign-in failed. Please try again.");
+      setPending(false);
+    }
+  };
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -40,7 +51,16 @@ export function LoginPersistentPage() {
               Use your library account to save progress, keep favorites, and
               manage the shelves.
             </p>
-            <form onSubmit={submit} className="mt-8 space-y-7">
+            <button
+              type="button"
+              onClick={signInGoogle}
+              disabled={pending}
+              className="focus-ring mt-8 inline-flex w-full items-center justify-center gap-3 border border-[#4a4052] px-5 py-3 text-xs font-bold uppercase tracking-[.15em] text-[#f3eee6] disabled:opacity-50"
+            >
+              Continue with Google
+            </button>
+            <div className="mt-7 flex items-center gap-3 text-[.62rem] uppercase tracking-[.16em] text-[#716a79]"><span className="h-px flex-1 bg-[#332d39]" /><span>or use email</span><span className="h-px flex-1 bg-[#332d39]" /></div>
+            <form onSubmit={submit} className="mt-7 space-y-7">
               <label className="block">
                 <span className="eyebrow text-[#817989]">Email</span>
                 <input
