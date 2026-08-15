@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import { COOKIE_NAME } from "../shared/const.js";
 import { getSessionCookieOptions } from "./_core/cookies.js";
 import { systemRouter } from "./_core/systemRouter.js";
@@ -51,6 +52,22 @@ export const appRouter = router({
     categories: publicProcedure.query(() => listCategories()),
   }),
   reader: router({
+    pdfUrl: protectedProcedure
+      .input(z.object({ bookId: z.number().int().positive() }))
+      .query(async ({ input }) => {
+        const { data: book, error: bookError } = await getSupabase()
+          .from("books")
+          .select("pdf_key,status")
+          .eq("id", input.bookId)
+          .maybeSingle();
+        if (bookError) throw bookError;
+        if (!book || book.status !== "published" || !book.pdf_key) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "This book has no readable PDF." });
+        }
+        const { data, error } = await getSupabase().storage.from("books").createSignedUrl(book.pdf_key, 3600);
+        if (error) throw error;
+        return { url: data.signedUrl, expiresIn: 3600 };
+      }),
     saveProgress: protectedProcedure
       .input(
         z.object({
