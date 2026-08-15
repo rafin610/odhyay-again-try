@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { ENV, isSupabaseConfigured } from "./env";
+import { ENV, isSupabaseConfigured } from "./env.js";
 
 /**
  * Cached service-role Supabase client. The singleton is held at module scope so

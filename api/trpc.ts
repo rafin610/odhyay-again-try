@@ -10,9 +10,9 @@ type VercelResponse = ServerResponse & {
   status(code: number): VercelResponse;
   send(body: string): void;
 };
-import { appRouter } from "../server/routers";
-import { authenticateRequest } from "../server/_core/auth";
-import type { TrpcContext } from "../server/_core/context";
+import { appRouter } from "../server/routers.js";
+import { authenticateRequest } from "../server/_core/auth.js";
+import type { TrpcContext } from "../server/_core/context.js";
 
 function headerValue(value: string | string[] | undefined) {
   return Array.isArray(value) ? value.join(",") : value;

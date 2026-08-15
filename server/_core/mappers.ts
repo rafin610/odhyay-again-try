@@ -1,4 +1,4 @@
-import type { BookRecord, CategoryRecord, User, UserRole } from "../types";
+import type { BookRecord, CategoryRecord, User, UserRole } from "../types.js";
 
 type UserRow = {
   id: string;

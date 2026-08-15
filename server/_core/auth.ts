@@ -1,9 +1,9 @@
 import type { Request } from "express";
-import { COOKIE_NAME } from "@shared/const";
-import type { User } from "../types";
-import { ForbiddenError } from "../../shared/_core/errors";
-import { getSupabase } from "./supabase";
-import { getOrCreateUserFromAuth } from "../db";
+import { COOKIE_NAME } from "../../shared/const.js";
+import type { User } from "../types.js";
+import { ForbiddenError } from "../../shared/_core/errors.js";
+import { getSupabase } from "./supabase.js";
+import { getOrCreateUserFromAuth } from "../db.js";
 
 /**
  * Parse a Cookie header into a map of cookie -> value.

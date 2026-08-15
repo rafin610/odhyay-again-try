@@ -2,8 +2,8 @@ import express from "express";
 import path from "node:path";
 import fs from "node:fs";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
-import { appRouter } from "./routers";
-import { createExpressContext } from "./_core/context";
+import { appRouter } from "./routers.js";
+import { createExpressContext } from "./_core/context.js";
 
 /**
  * The full HTTP app, kept free of `server.listen()` so the same request

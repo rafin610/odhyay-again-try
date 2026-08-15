@@ -1,7 +1,7 @@
 import type { User as AuthUser } from "@supabase/supabase-js";
-import { toBookRecord, toCategoryRecord, toUser } from "./_core/mappers";
-import type { BookRecord, CategoryRecord, CreateBookInput, User } from "./types";
-import { getSupabase } from "./_core/supabase";
+import { toBookRecord, toCategoryRecord, toUser } from "./_core/mappers.js";
+import type { BookRecord, CategoryRecord, CreateBookInput, User } from "./types.js";
+import { getSupabase } from "./_core/supabase.js";
 
 function requireDb() {
   return getSupabase();

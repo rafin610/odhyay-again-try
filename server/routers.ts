@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { COOKIE_NAME } from "@shared/const";
-import { getSessionCookieOptions } from "./_core/cookies";
-import { systemRouter } from "./_core/systemRouter";
-import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
+import { COOKIE_NAME } from "../shared/const.js";
+import { getSessionCookieOptions } from "./_core/cookies.js";
+import { systemRouter } from "./_core/systemRouter.js";
+import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc.js";
 import {
   addBookmark,
   createBook,
@@ -11,7 +11,7 @@ import {
   listCategories,
   toggleFavorite,
   updateReadingProgress,
-} from "./db";
+} from "./db.js";
 
 const bookInput = z.object({
   title: z.string().trim().min(1).max(400),

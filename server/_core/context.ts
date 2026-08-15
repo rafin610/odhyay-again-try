@@ -2,8 +2,8 @@ import type { CreateAWSLambdaContextOptions } from "@trpc/server/adapters/aws-la
 import type { CreateExpressContextOptions } from "@trpc/server/adapters/express";
 import type { APIGatewayProxyEventV2 } from "aws-lambda";
 import type { Request, Response } from "express";
-import type { User } from "../types";
-import { authenticateRequest } from "./auth";
+import type { User } from "../types.js";
+import { authenticateRequest } from "./auth.js";
 
 export type TrpcContext = {
   req: {
