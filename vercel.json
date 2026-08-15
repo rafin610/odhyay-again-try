@@ -3,11 +3,6 @@
   "framework": "vite",
   "buildCommand": "pnpm run build",
   "outputDirectory": "dist/public",
-  "functions": {
-    "api/trpc.ts": {
-      "runtime": "nodejs22.x"
-    }
-  },
   "rewrites": [
     {
       "source": "/api/((?!trpc).*)",
