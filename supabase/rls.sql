@@ -164,15 +164,29 @@ create policy "covers_select_public" on storage.objects
   to anon, authenticated
   using (bucket_id = 'covers');
 
-create policy "covers_insert_public" on storage.objects
+drop policy if exists "covers_insert_public" on storage.objects;
+create policy "covers_insert_admin" on storage.objects
   for insert
   to authenticated
-  with check (bucket_id = 'covers');
+  with check (
+    bucket_id = 'covers'
+    and exists (
+      select 1 from public.users u
+      where u.id = public.app_user_id() and u.role = 'admin'
+    )
+  );
 
-create policy "covers_delete_public" on storage.objects
+drop policy if exists "covers_delete_public" on storage.objects;
+create policy "covers_delete_admin" on storage.objects
   for delete
   to authenticated
-  using (bucket_id = 'covers');
+  using (
+    bucket_id = 'covers'
+    and exists (
+      select 1 from public.users u
+      where u.id = public.app_user_id() and u.role = 'admin'
+    )
+  );
 
 -- -----------------------------------------------------------------------------
 -- Storage: private `books` bucket (PDFs; reading happens server-side with a
@@ -184,17 +198,38 @@ insert into storage.buckets (id, name, public)
 values ('books', 'books', false)
 on conflict (id) do nothing;
 
+drop policy if exists "books_select_signed" on storage.objects;
 create policy "books_select_signed" on storage.objects
   for select
   to authenticated
-  using (bucket_id = 'books');
+  using (
+    bucket_id = 'books'
+    and exists (
+      select 1 from public.users u
+      where u.id = public.app_user_id()
+    )
+  );
 
-create policy "books_insert_public" on storage.objects
+drop policy if exists "books_insert_public" on storage.objects;
+create policy "books_insert_admin" on storage.objects
   for insert
   to authenticated
-  with check (bucket_id = 'books');
+  with check (
+    bucket_id = 'books'
+    and exists (
+      select 1 from public.users u
+      where u.id = public.app_user_id() and u.role = 'admin'
+    )
+  );
 
-create policy "books_delete_public" on storage.objects
+drop policy if exists "books_delete_public" on storage.objects;
+create policy "books_delete_admin" on storage.objects
   for delete
   to authenticated
-  using (bucket_id = 'books');
+  using (
+    bucket_id = 'books'
+    and exists (
+      select 1 from public.users u
+      where u.id = public.app_user_id() and u.role = 'admin'
+    )
+  );

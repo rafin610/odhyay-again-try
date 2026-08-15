@@ -1,5 +1,6 @@
 -- =============================================================================
--- Odhyay: bootstrap tables + create the first super admin.
+-- Odhyay: bootstrap tables + create the first admin.
+-- The application role model is `user` / `admin`; there is no `super_admin` role.
 -- Run AFTER schema.sql and rls.sql.
 --
 -- 1. Create a user in Supabase Auth (Dashboard -> Authentication -> Add user)
@@ -9,7 +10,7 @@
 -- =============================================================================
 
 -- Manually promote the first user to admin.
--- (Server-side admin checks can also use a SUPABASE_ADMIN_EMAILS override
+-- (The server-side admin checks can also use a SUPABASE_ADMIN_EMAILS override
 -- env var as a backup; see server/_core/env.ts.)
 update public.users
 set role = 'admin'
