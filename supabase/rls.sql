@@ -63,8 +63,8 @@ create policy "categories_select_anon" on public.categories
 
 -- -----------------------------------------------------------------------------
 -- books
--- RLS: published books readable by everyone; drafts only visible via server
--- (admin) using the service-role key.
+-- RLS: published books readable by everyone; drafts only visible to
+-- admin/super_admin callers or server code using the service-role key.
 -- -----------------------------------------------------------------------------
 
 alter table public.books enable row level security;
@@ -78,7 +78,7 @@ create policy "books_select_draft_admin" on public.books
   for select
   to authenticated
   using (status = 'draft' and exists (
-    select 1 from public.users u where u.id = public.app_user_id() and u.role = 'admin'
+    select 1 from public.users u where u.id = public.app_user_id() and u.role in ('admin', 'super_admin')
   ));
 
 -- -----------------------------------------------------------------------------
@@ -172,7 +172,7 @@ create policy "covers_insert_admin" on storage.objects
     bucket_id = 'covers'
     and exists (
       select 1 from public.users u
-      where u.id = public.app_user_id() and u.role = 'admin'
+      where u.id = public.app_user_id() and u.role in ('admin', 'super_admin')
     )
   );
 
@@ -184,7 +184,7 @@ create policy "covers_delete_admin" on storage.objects
     bucket_id = 'covers'
     and exists (
       select 1 from public.users u
-      where u.id = public.app_user_id() and u.role = 'admin'
+      where u.id = public.app_user_id() and u.role in ('admin', 'super_admin')
     )
   );
 
@@ -218,7 +218,7 @@ create policy "books_insert_admin" on storage.objects
     bucket_id = 'books'
     and exists (
       select 1 from public.users u
-      where u.id = public.app_user_id() and u.role = 'admin'
+      where u.id = public.app_user_id() and u.role in ('admin', 'super_admin')
     )
   );
 
@@ -230,6 +230,6 @@ create policy "books_delete_admin" on storage.objects
     bucket_id = 'books'
     and exists (
       select 1 from public.users u
-      where u.id = public.app_user_id() and u.role = 'admin'
+      where u.id = public.app_user_id() and u.role in ('admin', 'super_admin')
     )
   );

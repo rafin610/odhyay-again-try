@@ -1,7 +1,6 @@
 import type { User as AuthUser } from "@supabase/supabase-js";
 import { toBookRecord, toCategoryRecord, toUser } from "./_core/mappers";
 import type { BookRecord, CategoryRecord, CreateBookInput, User } from "./types";
-import { ENV } from "./_core/env";
 import { getSupabase } from "./_core/supabase";
 
 function requireDb() {
@@ -22,14 +21,14 @@ export function toSlug(value: string) {
 
 /**
  * Fetch the app-side `users` mirror for a Supabase auth user, creating it when
- * it does not exist yet. The role is derived from SUPABASE_ADMIN_EMAILS.
+ * it does not exist yet. New users start as `user`; admin roles are assigned in the database bootstrap/admin workflow.
  */
 export async function getOrCreateUserFromAuth(authUser: AuthUser): Promise<User> {
   const db = requireDb();
   const email = (authUser.email ?? authUser.user_metadata?.email ?? null)?.toString().toLowerCase() ?? null;
   const rawName = authUser.user_metadata?.full_name ?? authUser.user_metadata?.name ?? authUser.email ?? null;
   const name = typeof rawName === "string" && rawName.trim() ? rawName.trim() : null;
-  const role: "user" | "admin" = email && ENV.adminEmails.includes(email) ? "admin" : "user";
+  const role: "user" = "user";
 
   const { data: existing } = await db
     .from("users")
@@ -39,13 +38,13 @@ export async function getOrCreateUserFromAuth(authUser: AuthUser): Promise<User>
 
   if (existing) {
     const stale = Date.now() - new Date(existing.last_signed_in).getTime() > 5 * 60 * 1000;
-    if (stale || existing.name !== name || existing.email !== email || existing.role !== role) {
+    if (stale || existing.name !== name || existing.email !== email) {
       await db
         .from("users")
-        .update({ name, email, role, last_signed_in: new Date().toISOString() })
+        .update({ name, email, last_signed_in: new Date().toISOString() })
         .eq("id", authUser.id);
     }
-    return toUser({ ...existing, name: existing.name ?? name, email: existing.email ?? email, role: existing.role ?? role });
+    return toUser({ ...existing, name: existing.name ?? name, email: existing.email ?? email });
   }
 
   await db

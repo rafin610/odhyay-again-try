@@ -1,20 +1,28 @@
 -- =============================================================================
--- Odhyay: bootstrap tables + create the first admin.
--- The application role model is `user` / `admin`; there is no `super_admin` role.
+-- Odhyay: bootstrap tables + create the first super admin.
+-- The application role model is `user` / `admin` / `super_admin`.
+-- This script mirrors the selected auth.users row before promoting it.
 -- Run AFTER schema.sql and rls.sql.
 --
 -- 1. Create a user in Supabase Auth (Dashboard -> Authentication -> Add user)
---    with the email address you want for the first admin.
--- 2. Replace <SUPER_ADMIN@EMAIL> below with that email and run this script.
+--    with the email address you want for the first super admin.
+-- 2. Replace <SUPER_ADMIN@EMAIL> below with that exact email and run this script.
 -- 3. Optionally seed starter categories and an author.
 -- =============================================================================
 
--- Manually promote the first user to admin.
--- (The server-side admin checks can also use a SUPABASE_ADMIN_EMAILS override
--- env var as a backup; see server/_core/env.ts.)
-update public.users
-set role = 'admin'
-where email = '<SUPER_ADMIN@EMAIL>';
+-- Mirror the Auth identity into the application users table, then promote it.
+insert into public.users (id, name, email, role)
+select id,
+       coalesce(raw_user_meta_data->>'full_name', raw_user_meta_data->>'name', email),
+       lower(email),
+       'super_admin'
+from auth.users
+where lower(email) = lower('<SUPER_ADMIN@EMAIL>')
+on conflict (id) do update
+set name = excluded.name,
+    email = excluded.email,
+    role = 'super_admin',
+    updated_at = now();
 
 -- -----------------------------------------------------------------------------
 -- Starter categories (optional seed data)

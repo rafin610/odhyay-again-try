@@ -16,7 +16,7 @@ export function toDate(value: string | Date | null | undefined): Date {
 }
 
 export function toUser(row: UserRow): User {
-  const role = row.role === "admin" ? "admin" : "user";
+  const role = row.role === "super_admin" ? "super_admin" : row.role === "admin" ? "admin" : "user";
   return {
     id: row.id,
     name: row.name,

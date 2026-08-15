@@ -12,7 +12,7 @@
 -- Enum types
 -- -----------------------------------------------------------------------------
 
-create type public.user_role as enum ('user', 'admin');
+create type public.user_role as enum ('user', 'admin', 'super_admin');
 create type public.book_status as enum ('draft', 'published');
 
 -- -----------------------------------------------------------------------------
