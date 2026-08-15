@@ -2,6 +2,7 @@ import { z } from "zod";
 import { COOKIE_NAME } from "../shared/const.js";
 import { getSessionCookieOptions } from "./_core/cookies.js";
 import { systemRouter } from "./_core/systemRouter.js";
+import { getSupabase } from "./_core/supabase.js";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc.js";
 import {
   addBookmark,
@@ -75,6 +76,19 @@ export const appRouter = router({
   admin: router({
     listBooks: adminProcedure.query(() => listBooks({ includeDrafts: true })),
     createBook: adminProcedure.input(bookInput).mutation(async ({ input }) => createBook(input)),
+    createUploadUrl: adminProcedure
+      .input(
+        z.object({
+          bucket: z.enum(["covers", "books"]),
+          extension: z.enum(["png", "jpg", "jpeg", "webp", "pdf"]),
+        }),
+      )
+      .mutation(async ({ input }) => {
+        const path = `${input.bucket}/${crypto.randomUUID()}.${input.extension}`;
+        const { data, error } = await getSupabase().storage.from(input.bucket).createSignedUploadUrl(path);
+        if (error) throw error;
+        return { bucket: input.bucket, path, token: data.token };
+      }),
   }),
 });
 
