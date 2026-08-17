@@ -148,7 +148,7 @@
 
   /* Input styling */
   .input-text {
-    @apply border-b border-[#4a4052] bg-transparent py-3 text-lg text-[#f3eee6] outline-none transition focus:border-amethyst;
+    @apply border-b border-[#4a4052] bg-transparent py-3 text-lg text-[#f3eee6] outline-none transition focus:border-[#b7a4d7];
   }
 
   .input-sm {
@@ -157,7 +157,8 @@
 
   /* Card component */
   .card {
-    @apply border hairline bg-[#151219] rounded-sm;
+    @apply border bg-[#151219] rounded-sm;
+    border-color: rgba(243, 238, 230, 0.14);
   }
 
   /* Loading skeleton */
@@ -166,11 +167,11 @@
   }
 
   .skeleton-text {
-    @apply skeleton h-4 w-full;
+    @apply animate-pulse h-4 w-full;
   }
 
   .skeleton-avatar {
-    @apply skeleton h-10 w-10 rounded-full;
+    @apply animate-pulse h-10 w-10 rounded-full;
   }
 
   /* Smooth transitions */
@@ -201,27 +202,27 @@
 
   /* Responsive text sizing */
   .text-clamp-sm {
-    @apply text-[clamp(0.875rem, 2vw, 1rem)];
+    font-size: clamp(0.875rem, 2vw, 1rem);
   }
 
   .text-clamp-base {
-    @apply text-[clamp(1rem, 2.5vw, 1.125rem)];
+    font-size: clamp(1rem, 2.5vw, 1.125rem);
   }
 
   .text-clamp-lg {
-    @apply text-[clamp(1.5rem, 5vw, 2rem)];
+    font-size: clamp(1.5rem, 5vw, 2rem);
   }
 
   .text-clamp-xl {
-    @apply text-[clamp(2rem, 7vw, 3rem)];
+    font-size: clamp(2rem, 7vw, 3rem);
   }
 
   .text-clamp-2xl {
-    @apply text-[clamp(2.5rem, 8vw, 4rem)];
+    font-size: clamp(2.5rem, 8vw, 4rem);
   }
 
   .text-clamp-3xl {
-    @apply text-[clamp(3rem, 10vw, 5rem)];
+    font-size: clamp(3rem, 10vw, 5rem);
   }
 
   /* Utility for safe areas */
@@ -264,7 +265,15 @@
 
   /* Accessibility: Reduced motion */
   .sr-only {
-    @apply absolute w-px h-px p-0 -m-px overflow-hidden clip-rect-0 border-0;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
 
   /* Keyboard-focused states */
@@ -384,7 +393,7 @@
 
 /* Skip to main content link (accessibility) */
 .skip-to-main {
-  @apply absolute -translate-y-full rounded-sm bg-amethyst px-4 py-2 text-sm font-bold text-[#17121c] focus-visible:translate-y-0;
+  @apply absolute -translate-y-full rounded-sm bg-[#b7a4d7] px-4 py-2 text-sm font-bold text-[#17121c] focus-visible:translate-y-0;
 }
 
 /* ============================================================================
