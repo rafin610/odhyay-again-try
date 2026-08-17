@@ -74,11 +74,15 @@ export function Header() {
   const nav = [
     { href: "/library", label: "Library" },
     { href: "/categories", label: "Categories" },
+    { href: "/favorites", label: "Favorites" },
     { href: "/about", label: "About" },
   ];
 
   return (
     <header className="relative z-30 border-b hairline bg-[#111015]/95 backdrop-blur-md">
+      <a href="#main-content" className="skip-to-main">
+        Skip to main content
+      </a>
       <div className="container flex h-[76px] items-center justify-between gap-6">
         <Logo />
 
@@ -86,7 +90,6 @@ export function Header() {
         <nav
           className="site-nav hidden items-center md:flex"
           aria-label="Primary navigation"
-          role="navigation"
         >
           {nav.map((item) => (
             <Link
@@ -100,10 +103,20 @@ export function Header() {
               {item.label}
             </Link>
           ))}
+          {user && (user.role === "admin" || user.role === "super_admin") && (
+            <Link
+              href="/admin"
+              className={`focus-ring text-[.76rem] font-semibold tracking-[.08em] transition-colors hover:text-amethyst ${
+                location.startsWith("/admin") ? "text-amethyst" : "text-[#b5afbb]"
+              }`}
+            >
+              Admin
+            </Link>
+          )}
         </nav>
 
         {/* Desktop Right Section */}
-        <div className="hidden items-center gap-4 md:flex" role="region" aria-label="User actions">
+        <div className="hidden items-center gap-4 md:flex">
           <Link
             href="/search"
             className="focus-ring flex items-center gap-2 text-[#b5afbb] transition-colors hover:text-[#f3eee6]"
@@ -118,17 +131,13 @@ export function Header() {
           <span className="h-5 w-px bg-[#332d39]" aria-hidden="true" />
 
           {user ? (
-            <span className="flex items-center gap-4">
-              <Link
-                href="/admin"
-                className="focus-ring flex items-center gap-2 text-[#b5afbb] transition-colors hover:text-[#f3eee6]"
-                aria-label={`Admin dashboard for ${user.name || 'user'}`}
-              >
-                <CircleUserRound size={17} />
-                <span className="max-w-[10rem] truncate text-[.72rem] font-semibold uppercase tracking-[.14em]">
+            <div className="flex items-center gap-4">
+              <span className="flex items-center gap-2 text-[#d1c8d5]">
+                <CircleUserRound size={17} className="text-amethyst" />
+                <span className="max-w-[8rem] truncate text-[.72rem] font-semibold tracking-[.08em]">
                   {user.name ?? "Signed in"}
                 </span>
-              </Link>
+              </span>
               <button
                 onClick={() => void signOut()}
                 className="focus-ring text-[.72rem] font-semibold uppercase tracking-[.14em] text-[#8f8996] transition-colors hover:text-[#f3eee6]"
@@ -136,7 +145,7 @@ export function Header() {
               >
                 Sign out
               </button>
-            </span>
+            </div>
           ) : (
             <Link
               href="/login"
@@ -157,7 +166,6 @@ export function Header() {
           onClick={() => setOpen(!open)}
           aria-label={`${open ? "Close" : "Open"} navigation menu`}
           aria-expanded={open}
-          aria-controls="mobile-nav"
         >
           {open ? <X size={22} /> : <Menu size={22} />}
         </button>
@@ -165,7 +173,7 @@ export function Header() {
 
       {/* Mobile Navigation */}
       {open && (
-        <div className="border-t hairline bg-[#151219] px-5 pb-6 pt-4 md:hidden" id="mobile-nav">
+        <div className="border-t hairline bg-[#151219] px-5 pb-6 pt-4 md:hidden">
           <nav className="flex flex-col gap-1" aria-label="Mobile navigation">
             {nav.map((item) => (
               <Link
@@ -178,27 +186,36 @@ export function Header() {
                 {item.label}
               </Link>
             ))}
+            {user && (user.role === "admin" || user.role === "super_admin") && (
+              <Link
+                onClick={() => setOpen(false)}
+                href="/admin"
+                className="border-b hairline py-4 text-sm font-semibold tracking-wide text-amethyst"
+              >
+                Admin Panel
+              </Link>
+            )}
             <Link
               onClick={() => setOpen(false)}
               href="/search"
               className="border-b hairline py-4 text-sm font-semibold tracking-wide text-[#d9d2dd]"
-              aria-label="Search books"
             >
               Search
             </Link>
             <Link
               onClick={() => setOpen(false)}
-              href="/login"
+              href={user ? "/favorites" : "/login"}
               className="py-4 text-left text-sm font-semibold tracking-wide text-[#d9d2dd]"
-              aria-label={user ? "View account" : "Sign in"}
             >
-              {user ? user.name ?? "Account" : "Login"}
+              {user ? `Account (${user.name ?? "User"})` : "Login"}
             </Link>
             {user && (
               <button
-                onClick={() => void signOut()}
-                className="text-left text-sm font-semibold tracking-wide text-[#8f8996]"
-                aria-label="Sign out"
+                onClick={() => {
+                  setOpen(false);
+                  void signOut();
+                }}
+                className="text-left py-2 text-sm font-semibold tracking-wide text-[#8f8996]"
               >
                 Sign out
               </button>
@@ -215,7 +232,7 @@ export function Header() {
 // ============================================================================
 export function Footer() {
   return (
-    <footer className="border-t hairline bg-[#0d0c10] py-12">
+    <footer className="border-t hairline bg-[#0d0c10] py-14">
       <div className="container flex flex-col justify-between gap-8 md:flex-row md:items-end">
         <div>
           <Logo />
@@ -225,14 +242,20 @@ export function Footer() {
         </div>
 
         <div className="flex flex-col gap-4 text-xs text-[#8f8996] md:items-end">
-          <div className="flex gap-5">
-            <Link href="/about" className="hover:text-[#f3eee6]">
+          <div className="flex flex-wrap gap-5">
+            <Link href="/about" className="transition-colors hover:text-[#f3eee6]">
               About
             </Link>
-            <Link href="/library" className="hover:text-[#f3eee6]">
+            <Link href="/library" className="transition-colors hover:text-[#f3eee6]">
               Library
             </Link>
-            <Link href="/admin" className="hover:text-[#f3eee6]">
+            <Link href="/categories" className="transition-colors hover:text-[#f3eee6]">
+              Categories
+            </Link>
+            <Link href="/favorites" className="transition-colors hover:text-[#f3eee6]">
+              Favorites
+            </Link>
+            <Link href="/admin" className="transition-colors hover:text-[#f3eee6]">
               Admin
             </Link>
           </div>
@@ -254,9 +277,11 @@ export function PageFrame({
   footer?: boolean;
 }) {
   return (
-    <div className="min-h-screen bg-[#111015] text-[#f3eee6]">
+    <div className="min-h-screen bg-[#111015] text-[#f3eee6] flex flex-col">
       <Header />
-      {children}
+      <div id="main-content" className="flex-1">
+        {children}
+      </div>
       {footer && <Footer />}
     </div>
   );
@@ -273,7 +298,7 @@ export function SectionLabel({
   number?: string;
 }) {
   return (
-    <div className="mb-5 flex items-center gap-3 text-[#928b9a]">
+    <div className="mb-6 flex items-center gap-3 text-[#928b9a]">
       <Mark small />
       <span className="eyebrow">
         {number ? `${number} / ` : ""}
@@ -290,18 +315,28 @@ export function SectionLabel({
 export function SearchBar({
   compact = false,
   defaultValue = "",
+  onChange,
 }: {
   compact?: boolean;
   defaultValue?: string;
+  onChange?: (val: string) => void;
 }) {
   const [, setLocation] = useLocation();
   const [value, setValue] = useState(defaultValue);
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setValue(val);
+    if (onChange) onChange(val);
+  };
+
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    setLocation(
-      `/search${value.trim() ? `?q=${encodeURIComponent(value.trim())}` : ""}`
-    );
+    if (!onChange) {
+      setLocation(
+        `/search${value.trim() ? `?q=${encodeURIComponent(value.trim())}` : ""}`
+      );
+    }
   };
 
   return (
@@ -319,7 +354,7 @@ export function SearchBar({
       />
       <input
         value={value}
-        onChange={(e) => setValue(e.target.value)}
+        onChange={handleChange}
         className={`w-full bg-transparent py-4 text-[#f3eee6] outline-none placeholder:text-[#716b77] ${
           compact ? "text-sm" : "text-base"
         }`}
@@ -329,7 +364,7 @@ export function SearchBar({
       />
       <button
         type="submit"
-        className="focus-ring px-1 py-4 text-[.66rem] font-bold uppercase tracking-[.18em] text-amethyst"
+        className="focus-ring px-2 py-4 text-[.66rem] font-bold uppercase tracking-[.18em] text-amethyst"
         aria-label="Submit search"
       >
         Search
@@ -348,6 +383,8 @@ export function BookCard({
   book: Book;
   index?: number;
 }) {
+  const [imgError, setImgError] = useState(false);
+
   return (
     <Link
       href={`/book/${book.slug}`}
@@ -357,23 +394,45 @@ export function BookCard({
       )}`}
     >
       {/* Cover Image */}
-      <div className="relative aspect-[2/3] overflow-hidden bg-[#24202a] cover-shadow">
-        <img
-          src={book.cover}
-          alt={`${book.title} cover`}
-          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.05]"
-        />
+      <div className="relative aspect-[2/3] overflow-hidden bg-[#24202a] cover-shadow rounded-sm">
+        {!imgError && book.cover ? (
+          <img
+            src={book.cover}
+            alt={`${book.title} cover`}
+            loading="lazy"
+            onError={() => setImgError(true)}
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+          />
+        ) : (
+          <div className="flex h-full w-full flex-col justify-between p-6 bg-gradient-to-br from-[#2a2434] to-[#16131c] text-[#f3eee6]">
+            <Mark small />
+            <div>
+              <p className="font-display text-lg leading-tight line-clamp-3 text-[#e8e0ee]">
+                {book.title}
+              </p>
+              <p className="mt-2 text-xs text-[#a79bb3] line-clamp-1">
+                {book.author}
+              </p>
+            </div>
+            <span className="text-[.6rem] font-bold uppercase tracking-[.16em] text-amethyst">
+              Odhyay
+            </span>
+          </div>
+        )}
+
         {/* Overlay Gradient */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#111015]/50 via-transparent to-transparent opacity-70 transition-opacity duration-300 group-hover:opacity-40" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#111015]/60 via-transparent to-transparent opacity-60 transition-opacity duration-300 group-hover:opacity-30" />
         
         {/* Category Badge */}
-        <span className="absolute left-3 top-3 inline-flex items-center gap-1 bg-[#111015]/80 backdrop-blur-sm px-2.5 py-1.5 text-[.65rem] font-bold uppercase tracking-[.16em] text-[#d1c8d5] border border-[#5a5163]/50">
-          <span className="w-1 h-1 rounded-full bg-[#b7a4d7]" />
-          {book.category}
-        </span>
+        {book.category && (
+          <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 bg-[#111015]/85 backdrop-blur-sm px-2.5 py-1 text-[.62rem] font-bold uppercase tracking-[.14em] text-[#d1c8d5] border border-[#5a5163]/40 rounded-xs">
+            <span className="w-1 h-1 rounded-full bg-amethyst" />
+            {book.category}
+          </span>
+        )}
         
         {/* Progress Bar */}
-        {book.progress ? (
+        {book.progress !== undefined && book.progress > 0 ? (
           <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-[#302a35]">
             <div
               className="h-full bg-gradient-to-r from-[#b7a4d7] to-[#cbbbe3] transition-all duration-500"
@@ -384,17 +443,21 @@ export function BookCard({
       </div>
 
       {/* Book Metadata */}
-      <div className="book-meta pt-5">
-        <h3 className="font-display text-[1.4rem] leading-tight text-[#f3eee6] transition-colors duration-200 group-hover:text-amethyst line-clamp-2">
+      <div className="book-meta pt-4">
+        <h3 className="font-display text-[1.35rem] leading-tight text-[#f3eee6] transition-colors duration-200 group-hover:text-amethyst line-clamp-2">
           {book.title}
         </h3>
-        <p className="mt-2.5 text-xs text-[#8f8996] font-medium line-clamp-1">
+        <p className="mt-2 text-xs text-[#8f8996] font-medium line-clamp-1">
           {book.author}
         </p>
-        <div className="mt-4 flex items-center gap-3 text-[.68rem] font-semibold uppercase tracking-[.14em] text-[#706a77]">
+        <div className="mt-3 flex items-center gap-2.5 text-[.66rem] font-semibold uppercase tracking-[.14em] text-[#706a77]">
           <span>{book.pages} pages</span>
-          <span className="w-1 h-1 rounded-full bg-[#645b6c]" />
-          <span className="line-clamp-1">{book.category}</span>
+          {book.category && (
+            <>
+              <span className="w-1 h-1 rounded-full bg-[#645b6c]" />
+              <span className="line-clamp-1">{book.category}</span>
+            </>
+          )}
         </div>
       </div>
     </Link>
@@ -413,3 +476,4 @@ export function BookGrid({ items }: { items: Book[] }) {
     </div>
   );
 }
+

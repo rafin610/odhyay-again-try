@@ -46,3 +46,41 @@ export type CreateBookInput = {
   coverUrl?: string;
   pdfKey?: string;
 };
+
+export type UpdateBookInput = {
+  id: number;
+  title?: string;
+  authorName?: string;
+  categoryName?: string;
+  description?: string;
+  pageCount?: number;
+  status?: BookStatus;
+  coverUrl?: string | null;
+  pdfKey?: string | null;
+};
+
+export type AuthorRecord = {
+  id: number;
+  name: string;
+  bio: string | null;
+  createdAt: Date;
+  bookCount?: number;
+};
+
+export type ReadingProgressRecord = {
+  id: number;
+  userId: string;
+  bookId: number;
+  currentPage: number;
+  progressPercentage: number;
+  updatedAt: Date;
+};
+
+export type BookmarkRecord = {
+  id: number;
+  userId: string;
+  bookId: number;
+  pageNumber: number;
+  createdAt: Date;
+};
+
