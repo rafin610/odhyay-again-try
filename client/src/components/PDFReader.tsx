@@ -1,5 +1,6 @@
-/* ODHYAY style: Premium In-App PDF Reader — calm, distraction-free reading experience. */
-import { useState, useEffect } from "react";
+/* ODHYAY style: Premium In-App PDF Reader — canvas-based via pdf.js, no iframe/embed.
+   Renders PDF pages onto HTML5 Canvas elements inside the app. */
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "wouter";
 import {
   ArrowLeft,
@@ -11,7 +12,15 @@ import {
   Maximize2,
   Minimize2,
   BookOpen,
+  Loader2,
+  AlertCircle,
+  Download,
+  Trash,
 } from "lucide-react";
+import * as pdfjsLib from "pdfjs-dist";
+
+// Point pdf.js worker to the matching CDN build
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 interface PDFReaderProps {
   book: {
@@ -32,9 +41,11 @@ interface PDFReaderProps {
   onBookmark: () => void;
   pdfUrl?: string;
   isLoadingPdf?: boolean;
+  showDownload?: boolean;
+  showPrint?: boolean;
 }
 
-// Header Navigation for Reader
+/* ─── Header ────────────────────────────────────────────────────────────── */
 function ReaderHeader({
   book,
   theme,
@@ -87,7 +98,7 @@ function ReaderHeader({
   );
 }
 
-// Controls Toolbar - Desktop
+/* ─── Desktop Controls ──────────────────────────────────────────────────── */
 function ReaderControlsDesktop({
   page,
   pages,
@@ -97,6 +108,8 @@ function ReaderControlsDesktop({
   onBookmark,
   onFullscreen,
   isFullscreen,
+  showDownload,
+  showPrint,
 }: {
   page: number;
   pages: number;
@@ -106,6 +119,8 @@ function ReaderControlsDesktop({
   onBookmark: () => void;
   onFullscreen: () => void;
   isFullscreen: boolean;
+  showDownload?: boolean;
+  showPrint?: boolean;
 }) {
   return (
     <div className="fixed bottom-6 left-1/2 z-40 -translate-x-1/2 flex items-center gap-3 rounded-lg border border-[#3d3547] bg-[#17141c]/98 px-4 py-3 backdrop-blur-lg text-[#d7cedb] shadow-2xl">
@@ -147,7 +162,7 @@ function ReaderControlsDesktop({
 
       <button
         className="focus-ring p-2 rounded transition hover:bg-[#2a2430]"
-        onClick={() => onZoomChange(Math.max(0.7, zoom - 0.1))}
+        onClick={() => onZoomChange(Math.max(0.5, zoom - 0.1))}
         aria-label="Zoom out"
         title="Zoom out (- key)"
       >
@@ -160,7 +175,7 @@ function ReaderControlsDesktop({
 
       <button
         className="focus-ring p-2 rounded transition hover:bg-[#2a2430]"
-        onClick={() => onZoomChange(Math.min(1.5, zoom + 0.1))}
+        onClick={() => onZoomChange(Math.min(2.0, zoom + 0.1))}
         aria-label="Zoom in"
         title="Zoom in (+ key)"
       >
@@ -186,21 +201,43 @@ function ReaderControlsDesktop({
       >
         {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
       </button>
+
+      {showDownload && (
+        <button
+          className="focus-ring p-2 rounded text-[#d7cedb] transition hover:bg-[#2a2430]"
+          aria-label="Download PDF"
+          title="Download PDF"
+        >
+          <Download size={16} />
+        </button>
+      )}
+
+      {showPrint && (
+        <button
+          className="focus-ring p-2 rounded text-[#d7cedb] transition hover:bg-[#2a2430]"
+          aria-label="Print PDF"
+          title="Print PDF"
+        >
+          <Trash size={16} />  {/* Using Trash as placeholder for print icon; can swap if needed */}
+        </button>
+      )}
     </div>
   );
 }
 
-// Mobile Reader Controls
+/* ─── Mobile Controls ───────────────────────────────────────────────────── */
 function ReaderControlsMobile({
   page,
   pages,
   onPageChange,
   onBookmark,
+  showDownload,
 }: {
   page: number;
   pages: number;
   onPageChange: (p: number) => void;
   onBookmark: () => void;
+  showDownload?: boolean;
 }) {
   return (
     <div className="fixed inset-x-0 bottom-0 z-40 flex h-20 items-center justify-between gap-3 bg-[#131118]/95 px-4 py-3 backdrop-blur-md border-t hairline text-[#d7cedb]">
@@ -244,11 +281,21 @@ function ReaderControlsMobile({
       >
         <ArrowRight size={18} />
       </button>
+
+      {showDownload && (
+        <button
+          className="focus-ring rounded-lg bg-[#2a2430] p-3 text-[#d7cedb] transition active:scale-95 disabled:opacity-30"
+          aria-label="Download"
+          title="Download"
+        >
+          <Download size={18} />
+        </button>
+      )}
     </div>
   );
 }
 
-// Progress Bar
+/* ─── Progress Bar ──────────────────────────────────────────────────────── */
 function ProgressBar({ page, pages }: { page: number; pages: number }) {
   const percentage = Math.round((page / pages) * 100);
   return (
@@ -265,6 +312,97 @@ function ProgressBar({ page, pages }: { page: number; pages: number }) {
   );
 }
 
+/* ─── Canvas PDF Page Renderer ──────────────────────────────────────────── */
+function PdfCanvasPage({
+  pdfDoc,
+  pageNumber,
+  scale,
+  theme,
+}: {
+  pdfDoc: pdfjsLib.PDFDocumentProxy;
+  pageNumber: number;
+  scale: number;
+  theme: string;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const renderTaskRef = useRef<pdfjsLib.RenderTask | null>(null);
+  const [rendering, setRendering] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function render() {
+      const canvas = canvasRef.current;
+      if (!canvas || !pdfDoc) return;
+
+      // Cancel any previous in-flight render
+      if (renderTaskRef.current) {
+        try { renderTaskRef.current.cancel(); } catch { /* already done */ }
+      }
+
+      setRendering(true);
+
+      try {
+        const pdfPage = await pdfDoc.getPage(pageNumber);
+        if (cancelled) return;
+
+        const viewport = pdfPage.getViewport({ scale: scale * window.devicePixelRatio });
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        canvas.style.width = `${viewport.width / window.devicePixelRatio}px`;
+        canvas.style.height = `${viewport.height / window.devicePixelRatio}px`;
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+
+        const task = pdfPage.render({ canvasContext: ctx, viewport });
+        renderTaskRef.current = task;
+
+        await task.promise;
+        if (!cancelled) setRendering(false);
+      } catch (err: any) {
+        if (err?.name !== "RenderingCancelledException" && !cancelled) {
+          console.error("PDF render error for page", pageNumber, err);
+          setRendering(false);
+        }
+      }
+    }
+
+    render();
+
+    return () => {
+      cancelled = true;
+      if (renderTaskRef.current) {
+        try { renderTaskRef.current.cancel(); } catch { /* noop */ }
+      }
+    };
+  }, [pdfDoc, pageNumber, scale]);
+
+  // Apply a CSS filter for sepia / daylight themes
+  const filterStyle =
+    theme === "sepia"
+      ? "sepia(0.35) brightness(0.92)"
+      : theme === "daylight"
+      ? "brightness(1.02)"
+      : "none";
+
+  return (
+    <div className="relative">
+      {rendering && (
+        <div className="absolute inset-0 flex items-center justify-center bg-[#211e25]/60 z-10">
+          <Loader2 size={24} className="animate-spin text-amethyst" />
+        </div>
+      )}
+      <canvas
+        ref={canvasRef}
+        className="block mx-auto rounded-sm"
+        style={{ filter: filterStyle }}
+      />
+    </div>
+  );
+}
+
+/* ─── Main PDFReader ────────────────────────────────────────────────────── */
 export function PDFReader({
   book,
   page,
@@ -280,7 +418,12 @@ export function PDFReader({
 }: PDFReaderProps) {
   const [isMobile, setIsMobile] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [pdfDoc, setPdfDoc] = useState<pdfjsLib.PDFDocumentProxy | null>(null);
+  const [pdfError, setPdfError] = useState<string | null>(null);
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const [actualPageCount, setActualPageCount] = useState(pages);
 
+  // Responsive check
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -288,13 +431,85 @@ export function PDFReader({
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
+  // Load PDF document via pdf.js when URL is available
+  useEffect(() => {
+    if (!pdfUrl) {
+      setPdfDoc(null);
+      return;
+    }
+
+    let cancelled = false;
+    setPdfLoading(true);
+    setPdfError(null);
+
+    const loadingTask = pdfjsLib.getDocument({
+      url: pdfUrl,
+      // Disable range requests to avoid CORS issues with signed URLs
+      disableRange: true,
+      disableStream: true,
+    });
+
+    loadingTask.promise
+      .then((doc) => {
+        if (!cancelled) {
+          setPdfDoc(doc);
+          setActualPageCount(doc.numPages);
+          setPdfLoading(false);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          console.error("PDF load error:", err);
+          setPdfError(
+            err?.message?.includes("Missing PDF")
+              ? "This PDF file could not be found. Please contact the library admin."
+              : err?.message?.includes("password")
+              ? "This PDF is password-protected and cannot be opened."
+              : "Failed to load the PDF document. Please try again."
+          );
+          setPdfLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+      loadingTask.destroy();
+    };
+  }, [pdfUrl]);
+
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen?.().then(() => setIsFullscreen(true)).catch(() => {});
+      document.documentElement
+        .requestFullscreen?.()
+        .then(() => setIsFullscreen(true))
+        .catch(() => {});
     } else {
-      document.exitFullscreen?.().then(() => setIsFullscreen(false)).catch(() => {});
+      document
+        .exitFullscreen?.()
+        .then(() => setIsFullscreen(false))
+        .catch(() => {});
     }
   };
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement) return;
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        e.preventDefault();
+        onPageChange(Math.max(1, page - 1));
+      } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        e.preventDefault();
+        onPageChange(Math.min(totalPages, page + 1));
+      } else if (e.key === "-") {
+        onZoomChange(Math.max(0.5, zoom - 0.1));
+      } else if (e.key === "+" || e.key === "=") {
+        onZoomChange(Math.min(2.0, zoom + 0.1));
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [page, zoom, onPageChange, onZoomChange]);
 
   const themeClass =
     theme === "sepia"
@@ -310,10 +525,9 @@ export function PDFReader({
       ? "bg-[#eee8da] text-[#413c38]"
       : "bg-[#211e25] text-[#d9d2d8]";
 
-  // Append parameters to disable browser native download/toolbar UI where supported
-  const securePdfUrl = pdfUrl
-    ? `${pdfUrl}#toolbar=0&navpanes=0&scrollbar=1&page=${page}`
-    : undefined;
+  const totalPages = actualPageCount || pages;
+  const isDocReady = pdfDoc !== null;
+  const isLoading = isLoadingPdf || pdfLoading;
 
   return (
     <div
@@ -321,54 +535,84 @@ export function PDFReader({
       onContextMenu={(e) => e.preventDefault()}
     >
       <ReaderHeader book={book} theme={theme} onTheme={onThemeChange} />
-      <ProgressBar page={page} pages={pages} />
+      <ProgressBar page={page} pages={totalPages} />
 
       <main className="flex min-h-[calc(100vh-64px)] flex-col items-center pt-20 pb-28 px-2 md:pb-12 md:pt-8">
         <div className="mb-6 flex w-full max-w-[900px] justify-between text-[.7rem] font-semibold uppercase tracking-[.14em] text-white/40 px-2">
           <span>{book.categoryName ?? "Library"}</span>
           <span>
-            {Math.round((page / pages) * 100)}% · Page {page} of {pages}
+            {Math.round((page / totalPages) * 100)}% · Page {page} of{" "}
+            {totalPages}
           </span>
         </div>
 
-        {/* PDF Reader Canvas / Viewport */}
+        {/* PDF Canvas Viewport */}
         <div
-          className="w-full max-w-[900px] rounded-sm overflow-hidden shadow-2xl transition-transform duration-200 border border-white/10"
+          className="w-full max-w-[900px] rounded-sm overflow-hidden shadow-2xl border border-white/10"
           style={{
-            transform: isMobile ? "scale(1)" : `scale(${zoom})`,
+            transform: isMobile ? "scale(1)" : undefined,
             transformOrigin: "top center",
           }}
         >
-          {securePdfUrl ? (
-            <iframe
-              src={securePdfUrl}
-              title={`Reading ${book.title}`}
-              className="h-[80vh] md:h-[820px] w-full bg-white border-0"
-              sandbox="allow-scripts allow-same-origin"
+          {isDocReady ? (
+            /* ── Canvas-rendered PDF page ── */
+            <PdfCanvasPage
+              pdfDoc={pdfDoc}
+              pageNumber={Math.min(page, totalPages)}
+              scale={isMobile ? 1.0 : zoom}
+              theme={theme}
             />
-          ) : isLoadingPdf ? (
+          ) : isLoading ? (
+            /* ── Loading state ── */
             <div
-              className={`h-[80vh] md:h-[820px] flex items-center justify-center ${paperClass} animate-pulse`}
+              className={`h-[80vh] md:h-[820px] flex items-center justify-center ${paperClass}`}
             >
               <div className="text-center p-8">
-                <BookOpen size={28} className="mx-auto mb-4 text-amethyst animate-bounce" />
-                <div className="text-sm font-semibold text-current/80 mb-2">
-                  Preparing your book…
+                <Loader2
+                  size={32}
+                  className="mx-auto mb-4 text-amethyst animate-spin"
+                />
+                <div className="text-sm font-semibold mb-2" style={{ color: "inherit" }}>
+                  Loading your book…
                 </div>
-                <div className="text-xs text-current/50">
-                  Verifying authenticated access
+                <div className="text-xs opacity-50">
+                  Fetching and rendering PDF
                 </div>
               </div>
             </div>
+          ) : pdfError ? (
+            /* ── Error state ── */
+            <div
+              className={`h-[80vh] md:h-[820px] flex items-center justify-center ${paperClass}`}
+            >
+              <div className="text-center p-8 max-w-sm">
+                <AlertCircle
+                  size={32}
+                  className="mx-auto mb-4 text-red-400"
+                />
+                <h3 className="font-display text-xl mb-2">
+                  Unable to load PDF
+                </h3>
+                <p className="text-sm opacity-60 mb-6">{pdfError}</p>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="btn-primary text-xs"
+                >
+                  Retry
+                </button>
+              </div>
+            </div>
           ) : (
+            /* ── No PDF available ── */
             <div
               className={`h-[80vh] md:h-[820px] flex items-center justify-center ${paperClass}`}
             >
               <div className="text-center p-8">
                 <BookOpen size={32} className="mx-auto mb-4 opacity-40" />
                 <h3 className="font-display text-2xl mb-2">PDF Pending</h3>
-                <p className="text-sm text-current/60 max-w-sm">
-                  This book has been registered, but its PDF document is being processed by the library admin.
+                <p className="text-sm opacity-60 max-w-sm">
+                  This book has been registered, but its PDF document is being
+                  processed by the library admin.
                 </p>
               </div>
             </div>
@@ -385,20 +629,23 @@ export function PDFReader({
       {!isMobile ? (
         <ReaderControlsDesktop
           page={page}
-          pages={pages}
+          pages={totalPages}
           zoom={zoom}
           onPageChange={onPageChange}
           onZoomChange={onZoomChange}
           onBookmark={onBookmark}
           onFullscreen={toggleFullscreen}
           isFullscreen={isFullscreen}
+          showDownload={false}
+          showPrint={false}
         />
       ) : (
         <ReaderControlsMobile
           page={page}
-          pages={pages}
+          pages={totalPages}
           onPageChange={onPageChange}
           onBookmark={onBookmark}
+          showDownload={false}
         />
       )}
     </div>

@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { BookCard, BookGrid, Mark, PageFrame, SearchBar, SectionLabel } from "@/components/OdhyayShell";
+import { Logo, BookCard, BookGrid, Mark, PageFrame, SearchBar, SectionLabel } from "@/components/OdhyayShell";
 import { PDFReader } from "@/components/PDFReader";
 import { EmptyState } from "@/components/EmptyState";
 import { BookGridSkeleton, PageHeaderSkeleton } from "@/components/LoadingSkeleton";
@@ -55,6 +55,10 @@ export function HomePersistentPage() {
   const continueReading = trpc.library.continueReading.useQuery(undefined, {
     enabled: isAuthenticated,
   });
+  const isFav = trpc.reader.isFavorite.useQuery(
+    { bookId: 0 },
+    { enabled: false }
+  );
 
   const items = (library.data ?? []).map(toViewBook);
   const featured = items[0];
@@ -62,156 +66,155 @@ export function HomePersistentPage() {
 
   return (
     <PageFrame>
-      <main>
-        {/* Hero Section */}
-        <section className="relative min-h-[700px] overflow-hidden border-b hairline sm:min-h-[660px] lg:min-h-[700px]">
+      <main className="container mx-auto px-4 py-12">
+        {/* Header */}
+        <header className="mb-16 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <Logo />
+
+          <nav className="hidden sm:flex items-center gap-8">
+            <Link href="/library" className="text-[#8f8996] transition-colors hover:text-amethyst">
+              Library
+            </Link>
+            <Link href="/categories" className="text-[#8f8996] transition-colors hover:text-amethyst">
+              Categories
+            </Link>
+            <Link href="/favorites" className="text-[#8f8996] transition-colors hover:text-amethyst">
+              Favorites
+            </Link>
+          </nav>
+
+          <div className="flex items-center gap-3">
+            <SearchBar compact />
+            {isAuthenticated ? (
+              <div className="flex items-center gap-2">
+                <Heart size={16} className="fill-amethyst text-amethyst" />{" "}
+                {isFav.data ? "Saved in Favorites" : "Add to Favorites"}
+              </div>
+            ) : (
+              <Link href="/login" className="text-[.72rem] font-semibold uppercase tracking-[.12em] text-[#8f8996] hover:text-amethyst">
+                Login
+              </Link>
+            )}
+          </div>
+        </header>
+
+        {/* Hero */}
+        <section className="relative mb-12 overflow-hidden rounded-lg border-b hairline bg-gradient-to-b from-[var(--surface)] to-[var(--background)]">
           <img
             src={assets.hero}
             alt="A quiet reading room"
-            className="absolute inset-0 h-full w-full object-cover opacity-60"
+            className="absolute inset-0 h-full w-full object-cover"
             loading="eager"
           />
-          <div className="hero-vignette absolute inset-0" />
-          <div className="relative container flex min-h-[700px] flex-col items-start justify-center py-20 sm:min-h-[660px] lg:min-h-[700px]">
-            <div className="w-full max-w-[720px]">
-              <p className="eyebrow text-amethyst">
-                A digital library for curious minds
-              </p>
-              <h1 className="font-display mt-7 text-[clamp(2.8rem,7.5vw,7.5rem)] leading-[.90] tracking-[-.03em]">
+          <div className="absolute inset-0 bg-[var(--background)]/80" />
+          <div className="relative container mx-auto max-w-[720px] py-20 flex flex-col sm:flex-row items-start justify-center gap-6">
+            <div>
+              <p className="eyebrow text-amethyst uppercase tracking-[.15em]">A digital library for curious minds</p>
+              <h1 className="font-display mt-4 text-[clamp(2.8rem,7vw,7.5rem)] leading-[.90] tracking-[-.03em] text-[var(--text)]">
                 Read.
                 <br />
-                <span className="text-[#b7a4d7]">Discover.</span>
+                <span className="text-amethyst">Discover.</span>
                 <br />
                 Grow.
               </h1>
-              <p className="mt-8 max-w-lg text-[1.05rem] leading-8 text-[#c1bac5]">
-                A calm place to read. Find the next page worth your time, and let
-                the rest of the world go quiet for a while.
+              <p className="mt-6 text-base leading-relaxed text-[#c1bac5] max-w-lg">
+                A calm place to read. Find the next page worth your time, and let the rest of the world go quiet for a while.
               </p>
-
-              {/* Action Buttons */}
-              <div className="mt-10 flex flex-wrap items-center gap-4 sm:gap-5">
-                <Link href="/library" className="btn-primary focus-ring">
-                  Explore Library <ArrowRight size={16} />
-                </Link>
-                <Link
-                  href="/categories"
-                  className="focus-ring inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[.15em] text-[#d1c8d5] transition-colors hover:text-amethyst"
-                >
-                  Browse Categories <ChevronRight size={16} />
-                </Link>
-              </div>
-
-              {/* Search Bar */}
-              <div className="mt-14 w-full max-w-[620px]">
-                <p className="mb-3 text-[.72rem] font-semibold uppercase tracking-[.16em] text-[#8f8996]">
-                  Search the library
-                </p>
-                <SearchBar />
-              </div>
+            </div>
+            <div className="hidden sm:block">
+              <BookOpen size={48} className="text-amethyst/20" />
             </div>
           </div>
         </section>
 
-        {/* Continue Reading Section (If Authenticated & Has Progress) */}
+        {/* Continue Reading */}
         {isAuthenticated && continueItem && (
-          <section className="border-b hairline bg-[#16131c] py-14">
-            <div className="container">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 rounded-sm border hairline bg-[#1c1824] p-6 lg:p-8">
-                <div className="flex items-center gap-6">
-                  <div className="h-20 w-14 shrink-0 overflow-hidden rounded-sm bg-[#25212b] cover-shadow">
-                    <img
-                      src={continueItem.book.coverUrl || fallbackCover}
-                      alt=""
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                  <div>
-                    <span className="inline-flex items-center gap-1.5 text-[.65rem] font-bold uppercase tracking-[.16em] text-amethyst">
-                      <BookOpen size={13} /> Continue Reading
-                    </span>
-                    <h3 className="font-display mt-2 text-2xl text-[#f3eee6]">
-                      {continueItem.book.title}
-                    </h3>
-                    <p className="mt-1 text-xs text-[#8f8996]">
-                      {continueItem.book.authorName} · Page {continueItem.currentPage} of {continueItem.book.pageCount} ({continueItem.progressPercentage}%)
-                    </p>
-                  </div>
+          <section className="mb-12 rounded-lg border hairline bg-[var(--elevated)] py-8">
+            <div className="container mx-auto max-w-2xl">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="h-12 w-14 shrink-0 rounded-sm bg-[var(--border)] overflow-hidden">
+                  <img
+                    src={continueItem.book.coverUrl || fallbackCover}
+                    alt=""
+                    className="h-full w-full object-cover"
+                  />
                 </div>
-                <Link
-                  href={`/read/${continueItem.book.slug}`}
-                  className="btn-primary shrink-0 self-start md:self-center"
-                >
-                  Resume Page {continueItem.currentPage} <ArrowRight size={15} />
-                </Link>
+                <div className="flex-1">
+                  <p className="text-xs font-semibold uppercase tracking-[.12em] text-amethyst">
+                    <BookOpen size={12} /> Continue Reading
+                  </p>
+                  <h2 className="font-display mt-1 text-xl leading-none">
+                    {continueItem.book.title}
+                  </h2>
+                  <p className="text-sm text-[#8f8996]">
+                    {continueItem.book.authorName} · {continueItem.progressPercentage}% complete
+                  </p>
+                </div>
               </div>
+              <Link
+                href={`/read/${continueItem.book.slug}`}
+                className="mt-4 w-full rounded-md bg-[var(--accent)] py-3 text-sm font-semibold uppercase tracking-[.14em] text-[var(--background)] transition-colors hover:opacity-90"
+              >
+                Resume Reading
+              </Link>
             </div>
           </section>
         )}
 
-        {/* Featured Book Section */}
-        <section className="container py-24 lg:py-36">
-          <SectionLabel number="01">Featured book</SectionLabel>
-          {library.isLoading ? (
-            <PageHeaderSkeleton />
-          ) : featured ? (
-            <div className="grid gap-14 lg:grid-cols-[minmax(0,1fr)_1.3fr] lg:items-center lg:gap-28">
-              <Link
-                href={`/book/${featured.slug}`}
-                className="focus-ring reveal group relative mx-auto block w-full max-w-[340px] lg:max-w-none"
-              >
-                <div className="aspect-[2/3] overflow-hidden bg-[#25212b] cover-shadow rounded-sm">
+        {/* Featured Book */}
+        <section className="mb-12 rounded-lg border hairline bg-[var(--elevated)]">
+          <div className="container mx-auto py-8">
+            <SectionLabel number="01">Featured book</SectionLabel>
+            {library.isLoading ? (
+              <div className="min-h-48 rounded-md bg-[var(--border)] animate-pulse" />
+            ) : featured ? (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                <div className="rounded-lg overflow-hidden bg-[var(--border)]">
                   <img
                     src={featured.cover}
                     alt={`${featured.title} cover`}
-                    className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]"
+                    className="h-[400px] w-full object-cover"
                   />
                 </div>
-              </Link>
-              <div className="max-w-[650px] reveal reveal-delay-1">
-                <p className="eyebrow text-[#8f8996]">
-                  Featured Edition · {featured.pages} pages
-                </p>
-                <h2 className="font-display mt-6 text-[clamp(2.6rem,5.5vw,5.2rem)] leading-[.93] tracking-[-.02em]">
-                  {featured.title}
-                </h2>
-                <p className="mt-6 text-[1rem] leading-8 text-[#b5adb8]">
-                  {featured.description}
-                </p>
-                <div className="mt-8 flex items-center gap-4 text-xs text-[#8f8996]">
-                  <span className="font-medium">{featured.author}</span>
-                  <span className="h-1 w-1 rounded-full bg-[#b7a4d7]" />
-                  <span className="font-medium">{featured.category}</span>
-                </div>
-                <div className="mt-10 flex flex-wrap gap-5">
+                <div className="px-6 py-8">
+                  <p className="text-xs font-semibold uppercase tracking-[.12em] text-amethyst mb-3">Featured Edition</p>
+                  <h2 className="font-display text-[clamp(2.4rem,5vw,3.2rem)] leading-[.93] mb-3">
+                    {featured.title}
+                  </h2>
+                  <p className="text-base text-[#a9a1ad] mb-4">
+                    {featured.description}
+                  </p>
+                  <div className="flex flex-col lg:flex-row gap-2 mb-4">
+                    <span className="text-sm text-[#8f8996]">by </span>
+                    <span className="font-medium">{featured.author}</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-sm text-[#8f8996]">
+                    <span>{featured.pages} pages</span>
+                    <span className="h-1 w-1 rounded-full bg-amethyst" />
+                    <span>{featured.category}</span>
+                  </div>
                   <Link
                     href={`/read/${featured.slug}`}
-                    className="focus-ring btn-primary"
+                    className="mt-4 rounded-md bg-[var(--accent)] py-2.5 text-sm font-semibold uppercase tracking-[.11em] text-[var(--background)] transition-colors"
                   >
-                    Read now <ArrowRight size={16} />
-                  </Link>
-                  <Link
-                    href={`/book/${featured.slug}`}
-                    className="focus-ring inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[.14em] text-[#8f8996] transition-colors hover:text-amethyst"
-                  >
-                    Learn more
+                    Start Reading
                   </Link>
                 </div>
               </div>
-            </div>
-          ) : (
-            <EmptyState
-              title="Your library is waiting for its first chapter"
-              description="No published books exist in the database yet. Sign in as an administrator to add your first book."
-              actionHref="/admin/books/new"
-              actionLabel="Add a book"
-            />
-          )}
+            ) : (
+              <EmptyState
+                title="Your library is waiting for its first chapter"
+                description="No published books exist in the database yet. Sign in as an administrator to add your first book."
+                actionHref="/admin/books/new"
+                actionLabel="Add a book"
+              />
+            )}
+          </div>
         </section>
 
-        {/* Recently Added Section */}
-        <section className="border-y hairline bg-[#151219] py-24 lg:py-36">
-          <div className="container">
+        {/* Recently Added */}
+        <section className="mb-12 rounded-lg border hairline bg-[var(--elevated)]">
+          <div className="container mx-auto py-6">
             <SectionLabel number="02">Recently added</SectionLabel>
             {library.isLoading ? (
               <BookGridSkeleton count={4} />
@@ -224,49 +227,35 @@ export function HomePersistentPage() {
               />
             )}
             {items.length > 0 && (
-              <div className="mt-16 flex justify-center">
+              <div className="mt-6 text-center">
                 <Link
                   href="/library"
-                  className="focus-ring inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[.15em] text-[#b7a4d7] transition-colors hover:text-[#cbbbe3]"
+                  className="text-[.76rem] font-semibold uppercase tracking-[.13em] text-amethyst transition-colors hover:text-[var(--accent)]"
                 >
-                  View all books <ArrowRight size={15} />
+                  View all books
                 </Link>
               </div>
             )}
           </div>
         </section>
 
-        {/* Browse by Category Section */}
-        <section className="container py-24 lg:py-36">
-          <div className="grid gap-16 lg:grid-cols-[1fr_2.2fr] lg:gap-28">
-            <div className="flex flex-col justify-center">
-              <SectionLabel number="03">Find your shelf</SectionLabel>
-              <h2 className="font-display text-[clamp(2.4rem,4.5vw,4.8rem)] leading-[.95] tracking-[-.01em]">
-                Read by<br />
-                <span className="text-amethyst">curiosity.</span>
-              </h2>
-              <p className="mt-6 max-w-md text-sm leading-7 text-[#8f8996]">
-                Explore our collection organized by subject, theme, and interest. Find your next favorite book.
-              </p>
-            </div>
-            <div className="grid grid-cols-2 border-t hairline sm:grid-cols-3">
-              {(categories.data ?? []).slice(0, 9).map((category, index) => (
+        {/* Categories */}
+        <section className="mb-12 rounded-lg border hairline bg-[var(--elevated)]">
+          <div className="container mx-auto py-6">
+            <SectionLabel number="03">Find your shelf</SectionLabel>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mt-4">
+              {(categories.data ?? []).slice(0, 12).map((category) => (
                 <Link
-                  href={`/library?category=${category.slug}`}
                   key={category.id}
-                  className="focus-ring group flex min-h-[110px] items-center justify-between border-b hairline px-3 py-6 text-sm font-medium text-[#c9c1ce] transition-colors hover:text-amethyst sm:px-5"
+                  href={`/library?category=${category.slug}`}
+                  className="group flex flex-col items-center justify-between border-b hairline px-4 py-3 text-sm font-medium text-[#c9c1ce] transition-colors hover:text-amethyst"
                 >
                   <span>{category.name}</span>
-                  <span className="text-[.65rem] font-semibold text-[#716a79] group-hover:text-[#b7a4d7]">
-                    {String(index + 1).padStart(2, "0")}
+                  <span className="text-[.6rem] font-semibold text-[#716a79] group-hover:text-amethyst">
+                    {String(category.id).padStart(2, "0")}
                   </span>
                 </Link>
               ))}
-              {!categories.isLoading && !categories.data?.length && (
-                <p className="col-span-full py-12 text-sm text-[#8f8996]">
-                  Categories will appear as books are added.
-                </p>
-              )}
             </div>
           </div>
         </section>
@@ -274,7 +263,6 @@ export function HomePersistentPage() {
     </PageFrame>
   );
 }
-
 export function LibraryPersistentPage() {
   const urlCategory = new URLSearchParams(window.location.search).get("category");
   const [categorySlug, setCategorySlug] = useState<string | undefined>(urlCategory ?? undefined);
@@ -534,7 +522,7 @@ export function BookPersistentPage() {
       );
       void isFav.refetch();
     },
-    onError: () => toast.error("Please sign in to manage favorites."),
+    onError: () => toast.error("Please sign in to manage favorites.")
   });
 
   if (!slug || detail.isLoading) {
@@ -567,18 +555,18 @@ export function BookPersistentPage() {
 
   return (
     <PageFrame>
-      <main className="container py-16 lg:py-24">
+      <main className="container mx-auto py-16 lg:py-24">
         <Link
           href="/library"
-          className="focus-ring inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[.14em] text-[#8f8996] transition-colors hover:text-[#c1bac5]"
+          className="focus-ring inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[.14em] text-[#8f8996] transition-colors hover:text-amethyst"
         >
           <ArrowLeft size={15} /> Back to library
         </Link>
 
-        <div className="mt-14 grid gap-14 lg:grid-cols-[minmax(280px,420px)_1fr] lg:items-center lg:gap-24">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(280px,420px)_1fr] lg:gap-20">
           {/* Book Cover */}
-          <div className="mx-auto w-full max-w-[380px] lg:mx-0">
-            <div className="aspect-[2/3] overflow-hidden bg-[#24202a] cover-shadow rounded-sm">
+          <div className="mx-auto w-full max-w-[360px] lg:mx-0">
+            <div className="aspect-[2/3] overflow-hidden bg-[var(--border)] cover-shadow rounded-sm">
               <img
                 src={view.cover}
                 alt={`${view.title} cover`}
@@ -588,30 +576,29 @@ export function BookPersistentPage() {
           </div>
 
           {/* Book Details */}
-          <div className="max-w-3xl">
+          <div className="px-6 py-8">
             <p className="eyebrow text-amethyst">
               {view.category} · {view.pages} pages
             </p>
-            <h1 className="font-display mt-6 text-[clamp(2.6rem,6.5vw,6.2rem)] leading-[.92] tracking-[-.02em]">
+            <h1 className="font-display text-[clamp(2.4rem,5vw,3.6rem)] leading-[.93] tracking-[-.01em]">
               {view.title}
             </h1>
-            <p className="mt-6 text-lg font-medium text-[#a9a1ad]">
+            <p className="mt-3 text-lg font-medium text-[#a9a1ad]">
               {view.author}
             </p>
-            <div className="my-8 h-px w-full bg-[#332d39]" />
-            <p className="max-w-2xl text-[1.05rem] leading-8 text-[#b7afbb]">
+            <p className="mt-6 text-[1.05rem] leading-8 text-[#b7afbb]">
               {view.description}
             </p>
 
             {/* Reading Progress Indicator if any */}
             {currentPage && currentPage > 1 && (
-              <div className="mt-8 flex items-center gap-4 rounded-sm border hairline bg-[#191622] px-5 py-4 text-xs">
-                <BookOpen size={16} className="text-amethyst shrink-0" />
-                <div className="flex-1">
+              <div className="mt-6 flex items-center gap-3 rounded-sm border hairline bg-[var(--background)] px-5 py-4 text-xs">
+                <BookOpen size={14} className="text-amethyst shrink-0" />
+                <div>
                   <p className="font-semibold text-[#f3eee6]">
                     You were reading Page {currentPage} of {view.pages}
                   </p>
-                  <div className="mt-2 h-1.5 w-full rounded-full bg-[#2a2434] overflow-hidden">
+                  <div className="mt-2 h-1.5 w-full rounded-full bg-[var(--border)] overflow-hidden">
                     <div
                       className="h-full bg-amethyst"
                       style={{ width: `${Math.round((currentPage / view.pages) * 100)}%` }}
@@ -622,7 +609,7 @@ export function BookPersistentPage() {
             )}
 
             {/* Action Buttons */}
-            <div className="mt-10 flex flex-wrap gap-5 items-center">
+            <div className="mt-8 flex flex-wrap gap-4 items-center">
               <Link
                 href={`/read/${view.slug}`}
                 className="focus-ring btn-primary"
@@ -635,9 +622,7 @@ export function BookPersistentPage() {
               <button
                 onClick={() => favorite.mutate({ bookId: book.id })}
                 className={`focus-ring inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[.14em] transition-colors ${
-                  isFav.data
-                    ? "text-amethyst"
-                    : "text-[#d1c8d5] hover:text-amethyst"
+                  isFav.data ? "text-amethyst" : "text-[var(--mutedText)] hover:text-amethyst"
                 }`}
               >
                 <Heart
@@ -650,14 +635,14 @@ export function BookPersistentPage() {
 
             {/* Bookmarks list if any */}
             {savedBookmarks.data && savedBookmarks.data.length > 0 && (
-              <div className="mt-12 border-t hairline pt-6">
+              <div className="mt-10 border-t hairline pt-6">
                 <p className="eyebrow text-[#8f8996] mb-3">Your Bookmarks</p>
                 <div className="flex flex-wrap gap-2">
                   {savedBookmarks.data.map((pageNum) => (
                     <Link
                       key={pageNum}
                       href={`/read/${view.slug}`}
-                      className="focus-ring inline-flex items-center gap-1.5 bg-[#1e1a26] px-3 py-1.5 text-xs text-[#d1c8d5] hover:text-amethyst border hairline rounded-xs"
+                      className="focus-ring inline-flex items-center gap-1.5 bg-[var(--background)] px-3 py-1.5 text-xs text-[var(--mutedText)] hover:text-amethyst border hairline rounded-xs"
                     >
                       <Bookmark size={12} className="text-amethyst" />
                       Page {pageNum}
@@ -672,7 +657,6 @@ export function BookPersistentPage() {
     </PageFrame>
   );
 }
-
 export function ReaderPersistentPage() {
   const [, params] = useRoute("/read/:slug");
   const slug = params?.slug;
@@ -697,8 +681,19 @@ export function ReaderPersistentPage() {
   const [page, setPage] = useState(1);
   const [zoom, setZoom] = useState(1);
   const [theme, setTheme] = useState(
-    () => localStorage.getItem("odhyay-reader-theme") || "dark"
+    "system"
   );
+
+  // System theme detection
+  useEffect(() => {
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    setTheme(prefersDark ? "dark" : "light");
+  }, []);
+
+  // Sync theme to localStorage
+  useEffect(() => {
+    localStorage.setItem("odhyay-reader-theme", theme);
+  }, [theme]);
 
   // Restore page position on load
   useEffect(() => {
@@ -711,10 +706,6 @@ export function ReaderPersistentPage() {
     { bookId: book?.id ?? 0 },
     { enabled: Boolean(book?.id && book.pdfKey && isAuthenticated) }
   );
-
-  useEffect(() => {
-    localStorage.setItem("odhyay-reader-theme", theme);
-  }, [theme]);
 
   // Save reading progress (debounced)
   useEffect(() => {
@@ -767,6 +758,8 @@ export function ReaderPersistentPage() {
       onBookmark={() =>
         saveBookmark.mutate({ bookId: book.id, pageNumber: page })
       }
+      showDownload={false}
+      showPrint={false}
       pdfUrl={pdf.data?.url}
       isLoadingPdf={pdf.isLoading}
     />

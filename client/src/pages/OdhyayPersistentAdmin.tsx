@@ -50,7 +50,7 @@ function AdminGate({ children }: { children: React.ReactNode }) {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#111015] p-6 text-sm text-[#8f8996]">
-        Checking admin privileges…
+        Checking admin privileges
       </div>
     );
   }
@@ -102,9 +102,9 @@ function AdminSidebar({
   ];
 
   return (
-    <aside className="flex h-full w-64 flex-col border-r hairline bg-[#151219] p-6">
+    <aside className="flex h-full w-64 flex-col border-r hairline bg-[var(--elevated)] p-6">
       <Logo />
-      <p className="eyebrow mt-12 text-[#777080]">Workspace</p>
+      <p className="eyebrow mt-12 text-[#716a79]">Workspace</p>
       <nav className="mt-4 flex flex-col gap-1.5">
         {links.map(({ label, href, icon: Icon }) => (
           <button
@@ -115,8 +115,8 @@ function AdminSidebar({
             }}
             className={`focus-ring flex items-center gap-3 px-3 py-3 text-left text-sm font-medium transition-all rounded-xs ${
               active === label
-                ? "bg-[#2c2534] text-amethyst shadow-sm"
-                : "text-[#9b93a1] hover:text-[#f3eee6] hover:bg-[#1f1b28]"
+                ? "bg-[var(--surface)] text-amethyst shadow-sm"
+                : "text-[var(--mutedText)] hover:text-[var(--accent)] hover:bg-[var(--surface)]"
             }`}
           >
             <Icon size={17} />
@@ -128,7 +128,7 @@ function AdminSidebar({
       <div className="mt-auto pt-12 border-t hairline">
         <Link
           href="/"
-          className="focus-ring flex items-center gap-2 text-xs font-semibold text-[#817989] hover:text-[#f3eee6] transition-colors"
+          className="focus-ring flex items-center gap-2 text-xs font-semibold text-[#716a79] hover:text-amethyst transition-colors"
         >
           <ArrowLeft size={14} /> Exit workspace
         </Link>
@@ -149,7 +149,7 @@ function AdminShell({
 
   return (
     <AdminGate>
-      <div className="flex min-h-screen bg-[#111015] text-[#f3eee6]">
+      <div className="flex min-h-screen bg-[#111015] text-[var(--text)]">
         {/* Desktop Sidebar */}
         <div className="hidden lg:block shrink-0">
           <AdminSidebar active={active} />
@@ -162,7 +162,7 @@ function AdminShell({
               className="fixed inset-0 bg-black/70 backdrop-blur-sm"
               onClick={() => setMobileMenu(false)}
             />
-            <div className="relative z-10 w-64 max-w-full bg-[#151219]">
+            <div className="relative z-10 w-64 max-w-full bg-[var(--elevated)]">
               <AdminSidebar
                 active={active}
                 onCloseMobile={() => setMobileMenu(false)}
@@ -172,11 +172,11 @@ function AdminShell({
         )}
 
         <div className="min-w-0 flex-1 flex flex-col">
-          <header className="flex h-[76px] items-center justify-between border-b hairline px-5 md:px-10 bg-[#0d0c10]/40 backdrop-blur-sm">
+          <header className="flex h-[76px] items-center justify-between border-b hairline px-5 md:px-10 bg-[var(--background)]/40 backdrop-blur-sm">
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setMobileMenu(true)}
-                className="p-2 text-[#f3eee6] lg:hidden rounded-sm focus-ring"
+                className="p-2 text-[var(--text)] lg:hidden rounded-sm focus-ring"
                 aria-label="Open menu"
               >
                 <Menu size={20} />
@@ -185,14 +185,14 @@ function AdminShell({
                 <Mark small />
                 <span className="font-display tracking-[.14em] text-sm">ODHYAY</span>
               </div>
-              <div className="hidden text-xs font-semibold text-[#8f8996] lg:block">
+              <div className="hidden text-xs font-semibold text-[#716a79] lg:block">
                 Admin workspace <span className="mx-2 text-[#51485b]">/</span>{" "}
                 <span className="text-amethyst">{active}</span>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 text-xs text-[#8f8996]">
-              <ShieldCheck size={16} className="text-[#82b49b]" />
+            <div className="flex items-center gap-3 text-xs text-[#716a79]">
+              <ShieldCheck size={16} className="text-amethyst" />
               <span className="hidden sm:inline">Protected Admin Access</span>
             </div>
           </header>
@@ -220,10 +220,10 @@ export function AdminPersistentDashboardPage() {
     <AdminShell active="Overview">
       <div className="mx-auto max-w-[1120px]">
         {/* Header */}
-        <div className="flex flex-col justify-between gap-6 border-b hairline pb-8 sm:flex-row sm:items-end">
+        <div className="flex flex-col sm:flex-row justify-between gap-6 border-b hairline pb-8 sm:items-end">
           <div>
             <p className="eyebrow text-amethyst">Overview</p>
-            <h1 className="font-display mt-3 text-4xl sm:text-5xl">
+            <h1 className="font-display mt-3 text-4xl sm:text-5xl text-[#f3eee6]">
               Library Status
             </h1>
             <p className="mt-2 text-sm text-[#8f8996]">
@@ -236,7 +236,7 @@ export function AdminPersistentDashboardPage() {
         </div>
 
         {/* Stats Grid */}
-        <div className="mt-8 grid gap-px border hairline bg-[#332d39] sm:grid-cols-2 lg:grid-cols-4 rounded-sm overflow-hidden">
+        <div className="mt-8 grid gap-2 border hairline bg-[var(--elevated)] sm:grid-cols-2 lg:grid-cols-4 rounded-sm overflow-hidden">
           {[
             { label: "Total Books", value: items.length, highlight: false },
             { label: "Published", value: published, highlight: true },
@@ -245,14 +245,14 @@ export function AdminPersistentDashboardPage() {
           ].map(({ label, value, highlight }) => (
             <div
               key={label}
-              className={`bg-[#151219] p-6 transition-colors hover:bg-[#1a161f] ${
+              className={`p-6 transition-colors hover:bg-[var(--surface)] ${
                 highlight ? "border-l-2 border-amethyst" : ""
               }`}
             >
-              <p className="text-xs font-semibold uppercase tracking-[.14em] text-[#837b8b]">
+              <p className="text-xs font-semibold uppercase tracking-[.11em] text-[#716a79]">
                 {label}
               </p>
-              <p className="font-display mt-4 text-4xl text-[#eee8ef]">
+              <p className="font-display mt-3 text-3xl text-[var(--text)]">
                 {records.isLoading ? "—" : value}
               </p>
             </div>
@@ -260,17 +260,17 @@ export function AdminPersistentDashboardPage() {
         </div>
 
         {/* Recent Books */}
-        <div className="mt-12 border hairline bg-[#151219] p-6 sm:p-8 rounded-sm">
+        <div className="mt-12 rounded-lg border hairline bg-[var(--elevated)] p-8 sm:p-10">
           <div className="flex items-center justify-between border-b hairline pb-5">
             <div>
-              <p className="eyebrow text-[#817989]">Recent activity</p>
-              <h2 className="mt-2 font-display text-2xl">
+              <p className="eyebrow text-[#716a79]">Recent activity</p>
+              <h2 className="mt-2 font-display text-xl text-[#f3eee6]">
                 Latest Additions
               </h2>
             </div>
             <Link
               href="/admin/books"
-              className="text-xs font-semibold text-amethyst hover:underline"
+              className="text-sm font-semibold text-amethyst hover:underline"
             >
               View all
             </Link>
@@ -283,36 +283,38 @@ export function AdminPersistentDashboardPage() {
               <TableRowSkeleton />
             </div>
           ) : items.length ? (
-            <div className="mt-6 divide-y divide-[#2a2430]">
+            <div className="mt-6 divide-y divide-[var(--border)]">
               {items.slice(0, 5).map((book) => (
                 <div
                   key={book.id}
-                  className="flex items-center gap-4 py-4 transition-colors hover:bg-[#1a161f] px-2 rounded-xs"
+                  className="flex items-center gap-4 py-4 transition-colors hover:bg-[var(--surface)] rounded-sm px-2"
                 >
                   {book.coverUrl ? (
                     <img
                       src={book.coverUrl}
                       alt=""
-                      className="h-12 w-9 object-cover rounded-xs"
+                      className="h-12 w-9 object-cover rounded-xs shrink-0"
                     />
                   ) : (
-                    <div className="flex h-12 w-9 items-center justify-center bg-[#27212d] text-amethyst rounded-xs">
+                    <div className="flex h-12 w-9 items-center justify-center bg-[var(--border)] text-amethyst rounded-xs shrink-0">
                       <FileText size={15} />
                     </div>
                   )}
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-[#ddd5df]">
+                    <p className="truncate text-sm font-medium text-[var(--mutedText)]">
                       {book.title}
                     </p>
-                    <p className="mt-0.5 text-xs text-[#817989]">
+                    <p className="mt-0.5 text-xs text-[#716a79]">
                       {book.authorName} · {book.categoryName ?? "Uncategorized"}
                     </p>
                   </div>
                   <span
-                    className={`text-[.64rem] font-bold uppercase tracking-[.14em] px-2 py-1 rounded-xs ${
+                    className={`text-[.62rem] font-bold uppercase tracking-[.12em] px-2 py-1 rounded-${
+                      book.status === "published" ? "left" : "right"
+                    } ${
                       book.status === "published"
-                        ? "bg-[#183025] text-[#82b49b]"
-                        : "bg-[#28212c] text-[#cda66c]"
+                        ? "bg-[var(--success)] text-[var(--background)]"
+                        : "bg-[var(--elevated)] text-amethyst"
                     }`}
                   >
                     {book.status}
@@ -335,7 +337,6 @@ export function AdminPersistentDashboardPage() {
     </AdminShell>
   );
 }
-
 // Books Management Page with Edit & Delete Modals
 export function AdminPersistentBooksPage() {
   const { user } = useAuth();
@@ -354,6 +355,7 @@ export function AdminPersistentBooksPage() {
       toast.success("Book updated successfully.");
       void utils.admin.listBooks.invalidate();
       void utils.library.list.invalidate();
+      void utils.library.categories.invalidate();
       setEditingBook(null);
     },
     onError: (err) => toast.error(err.message || "Failed to update book."),
@@ -364,6 +366,7 @@ export function AdminPersistentBooksPage() {
       toast.success("Book deleted permanently.");
       void utils.admin.listBooks.invalidate();
       void utils.library.list.invalidate();
+      void utils.library.categories.invalidate();
       setDeletingBook(null);
     },
     onError: (err) => toast.error(err.message || "Failed to delete book."),
@@ -381,10 +384,10 @@ export function AdminPersistentBooksPage() {
     <AdminShell active="Books">
       <div className="mx-auto max-w-[1120px]">
         {/* Header */}
-        <div className="flex flex-col justify-between gap-5 border-b hairline pb-8 sm:flex-row sm:items-end">
+        <div className="flex flex-col sm:flex-row justify-between gap-5 border-b hairline pb-8 sm:flex-row sm:items-end">
           <div>
             <p className="eyebrow text-amethyst">Content Management</p>
-            <h1 className="font-display mt-3 text-4xl sm:text-5xl">
+            <h1 className="font-display mt-3 text-4xl sm:text-5xl text-[var(--text)]">
               Books Library
             </h1>
             <p className="mt-2 text-sm text-[#8f8996]">
@@ -398,17 +401,17 @@ export function AdminPersistentBooksPage() {
 
         {/* Search & Filter */}
         <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 border-b hairline pb-5">
-          <div className="flex items-center gap-3 bg-[#151219] px-4 py-2.5 rounded-sm border hairline flex-1 max-w-md">
-            <Search size={16} className="text-[#8f8996]" />
+          <div className="flex items-center gap-3 bg-[var(--elevated)] px-4 py-2.5 rounded-sm border hairline flex-1 max-w-md">
+            <Search size={16} className="text-[var(--mutedText)]" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by title, author, or category…"
-              className="bg-transparent text-sm text-[#f3eee6] outline-none w-full placeholder:text-[#6a6373]"
+              placeholder="Search by title, author, or category..."
+              className="bg-transparent text-sm text-[var(--text)] outline-none w-full placeholder-text-[var(--mutedText)]"
             />
           </div>
-          <span className="text-xs font-semibold text-[#8f8996]">
+          <span className="text-xs font-semibold text-[#716a79]">
             Showing {filteredItems.length} of {items.length} books
           </span>
         </div>
@@ -424,7 +427,7 @@ export function AdminPersistentBooksPage() {
           <div className="mt-6 overflow-x-auto rounded-sm border hairline">
             <table className="w-full min-w-[700px] text-left">
               <thead>
-                <tr className="border-b hairline bg-[#151219] text-[.66rem] font-bold uppercase tracking-[.15em] text-[#716978]">
+                <tr className="border-b hairline bg-[var(--elevated)] text-[.64rem] font-bold uppercase tracking-[.13em] text-[#716978]">
                   <th className="px-5 py-4">Book</th>
                   <th className="px-5 py-4">Author</th>
                   <th className="px-5 py-4">Category</th>
@@ -433,11 +436,11 @@ export function AdminPersistentBooksPage() {
                   <th className="px-5 py-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#2a2430]">
+              <tbody className="divide-y divide-[var(--border)]">
                 {filteredItems.map((book) => (
                   <tr
                     key={book.id}
-                    className="transition-colors hover:bg-[#1a161f] text-sm"
+                    className="transition-colors hover:bg-[var(--surface)] text-sm"
                   >
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-4">
@@ -448,46 +451,46 @@ export function AdminPersistentBooksPage() {
                             className="h-12 w-8 object-cover rounded-xs shrink-0"
                           />
                         ) : (
-                          <div className="flex h-12 w-8 items-center justify-center bg-[#27212d] text-amethyst rounded-xs shrink-0">
+                          <div className="flex h-12 w-8 items-center justify-center bg-[var(--border)] text-amethyst rounded-xs shrink-0">
                             <FileText size={14} />
                           </div>
                         )}
-                        <span className="font-medium text-[#e1d9e2] line-clamp-1">
+                        <span className="font-medium text-[var(--text)] line-clamp-1">
                           {book.title}
                         </span>
                       </div>
                     </td>
-                    <td className="px-5 py-4 text-[#98909f]">{book.authorName}</td>
-                    <td className="px-5 py-4 text-[#98909f]">
+                    <td className="px-5 py-4 text-[#716a79]">{book.authorName}</td>
+                    <td className="px-5 py-4 text-[#716a79]">
                       {book.categoryName ?? "—"}
                     </td>
                     <td className="px-5 py-4">
                       <span
                         className={`inline-flex items-center gap-1.5 text-xs font-semibold ${
                           book.status === "published"
-                            ? "text-[#82b49b]"
-                            : "text-[#cda66c]"
+                            ? "text-[var(--success)]"
+                            : "text-amethyst"
                         }`}
                       >
                         <span className="h-1.5 w-1.5 rounded-full bg-current" />
                         {book.status === "published" ? "Published" : "Draft"}
                       </span>
                     </td>
-                    <td className="px-5 py-4 text-[#777080]">
+                    <td className="px-5 py-4 text-[#716a79]">
                       {book.pageCount || "—"}
                     </td>
                     <td className="px-5 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => setEditingBook(book)}
-                          className="focus-ring p-2 text-[#8f8996] hover:text-amethyst transition-colors"
+                          className="focus-ring p-2 text-[var(--mutedText)] hover:text-amethyst transition-colors"
                           title="Edit book"
                         >
                           <Edit size={16} />
                         </button>
                         <button
                           onClick={() => setDeletingBook(book)}
-                          className="focus-ring p-2 text-[#8f8996] hover:text-[#c76b6b] transition-colors"
+                          className="focus-ring p-2 text-[var(--mutedText)] hover:text-[var(--error)] transition-colors"
                           title="Delete book"
                         >
                           <Trash2 size={16} />
@@ -531,13 +534,13 @@ export function AdminPersistentBooksPage() {
               className="fixed inset-0 bg-black/80 backdrop-blur-sm"
               onClick={() => setDeletingBook(null)}
             />
-            <div className="relative z-10 w-full max-w-md border hairline bg-[#151219] p-8 text-center rounded-sm">
-              <Trash2 size={28} className="mx-auto text-[#c76b6b]" />
-              <h3 className="font-display mt-4 text-2xl">
+            <div className="relative z-10 w-full max-w-md border hairline bg-[var(--elevated)] p-8 text-center rounded-sm">
+              <Trash2 size={28} className="mx-auto text-amethyst" />
+              <h3 className="font-display mt-4 text-2xl text-[var(--text)]">
                 Delete this book permanently?
               </h3>
-              <p className="mt-3 text-sm text-[#8f8996] leading-6">
-                “{deletingBook.title}” will be removed from the library. This action cannot be undone.
+              <p className="mt-3 text-sm text-[#716a79] leading-6">
+                "{deletingBook.title}" will be removed from the library. This action cannot be undone.
               </p>
               <div className="mt-8 flex justify-center gap-4">
                 <button
@@ -549,7 +552,7 @@ export function AdminPersistentBooksPage() {
                 <button
                   onClick={() => deleteMutation.mutate({ id: deletingBook.id })}
                   disabled={deleteMutation.isPending}
-                  className="focus-ring inline-flex items-center gap-2 bg-[#c76b6b] px-5 py-3 text-xs font-bold uppercase tracking-[.15em] text-white hover:bg-[#d87c7c] disabled:opacity-50"
+                  className="focus-ring inline-flex items-center gap-2 bg-amethyst px-5 py-3 text-xs font-bold uppercase tracking-[.13em] text-[var(--background)] hover:text-[var(--accent)] disabled:opacity-50"
                 >
                   {deleteMutation.isPending ? "Deleting…" : "Delete Book"}
                 </button>
@@ -561,7 +564,6 @@ export function AdminPersistentBooksPage() {
     </AdminShell>
   );
 }
-
 // Edit Book Modal Component
 function EditBookModal({
   book,
